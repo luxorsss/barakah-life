@@ -6,20 +6,68 @@
     <title>Barakah Life</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#059669">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/quran.png">
+
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #059669; }
         iframe { border: none; width: 100%; height: 100%; display: block; }
+        
+        /* Tombol Install Melayang */
+        #installBtn {
+            display: none; /* Sembunyi dulu */
+            position: fixed;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: #059669;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 9999;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <iframe src="https://script.google.com/macros/s/AKfycbx_hHFkfItrWhuQjwbAaVU7Yy5DHqwAQO-wSMAmv2fvapYihlMQMVB-QGul3XqyxTUP/exec"></iframe>
+    
+    <button id="installBtn">📲 Install Aplikasi</button>
+
     <script>
+        // 1. Register Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('SW Terdaftar'))
+                .catch(err => console.log('Gagal SW:', err));
         }
+
+        // 2. Tangkap Event "Siap Install" (Khusus Android/Chrome)
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Cegah browser munculin mini-infobar otomatis (yang sering dicuekin user)
+            e.preventDefault();
+            // Simpan event untuk dipanggil nanti
+            deferredPrompt = e;
+            // Munculkan tombol manual kita
+            installBtn.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt(); // Panggil pop-up asli browser
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User memilih: ${outcome}`);
+                deferredPrompt = null;
+                installBtn.style.display = 'none'; // Sembunyikan tombol
+            }
+        });
     </script>
 </body>
 </html>
